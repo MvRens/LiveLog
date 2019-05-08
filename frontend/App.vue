@@ -2,7 +2,7 @@
   <div id="container">
     <div id="tabs">
       <router-link to="/" active-class="active" exact>Overview</router-link>
-      <router-link v-if="files !== null" v-for="file in files" :to="'/live/' + encodeURIComponent(file.fileId)" class="tab" active-class="active" exact>{{ file.title }}</router-link>
+      <router-link v-if="files !== null" v-for="file in files" :key="file.fileId" :to="'/live/' + encodeURIComponent(file.fileId)" class="tab" active-class="active" exact>{{ file.title }}</router-link>
     </div>
 
     <div id="page-container">
@@ -16,7 +16,8 @@ import axios from 'axios';
 
 
 export default {
-  data() {
+  data()
+  {
     return {
       files: null
     };
@@ -36,7 +37,7 @@ export default {
       {
         console.log('Error while retrieving file list:');
         console.log(error);
-      })
+      });
   }
 };
 </script>
