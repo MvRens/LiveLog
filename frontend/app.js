@@ -3,7 +3,7 @@ import VueNativeSock from 'vue-native-websocket';
 import VueRouter from 'vue-router';
 
 import App from './App.vue';
-import FileSelection from './components/FileSelection.vue';
+import Overview from './components/Overview.vue';
 import LiveView from './components/LiveView.vue';
 
 //import { library } from '@fortawesome/fontawesome-svg-core';
@@ -26,7 +26,7 @@ Vue.use(VueNativeSock, 'ws://', {
 
 const router = new VueRouter({
   routes: [
-    { path: '', component: FileSelection },
+    { path: '', component: Overview },
     { path: '/live/:fileId', component: LiveView, props: true }
   ]
 });
@@ -35,6 +35,5 @@ const router = new VueRouter({
 new Vue({
   el: '#app',
   render: h => h(App),
-  router,
-  store
+  router
 });

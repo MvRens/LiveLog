@@ -2,6 +2,7 @@ const express = require('express');
 const nocache = require('nocache');
 const md5 = require('md5');
 const Tail = require('tail').Tail;
+const debounce = require('debounce');
 const _ = require('lodash');
 
 const config = require('./config');
@@ -42,10 +43,38 @@ let clients = {};
 
 
 
-function initTail(fileId)
+function getInitialLines(fileId)
+{
+  if (files[fileId].tail === null)
+    return;
+
+  let tail = files[fileId].tail;
+  let start = tail.linePointer;
+  let lines = [];
+
+  for (let i = start; i < tail.length; i++)
+  {
+    if (tail.lines[i] !== null)
+      lines.push(tail.lines[i]);
+  }
+
+  for (let i = 0; i < start; i++)
+  {
+    if (tail.lines[i] !== null)
+      lines.push(tail.lines[i]);
+  }
+
+  return lines.join('\n');
+}
+
+
+function initTail(fileId, onSendInitialLines)
 {
   if (files[fileId].tail !== null)
+  {
+    onSendInitialLines(getInitialLines(fileId));
     return;
+  }
 
   let tail = {
     watcher: new Tail(files[fileId].filename, {
@@ -56,15 +85,28 @@ function initTail(fileId)
   };
 
   tail.lines.length = config.initialLines;
+  for (let i = 0; i < tail.lines.length; i++)
+    tail.lines[i] = null;
+
+  let broadcastLine = null;
+
+  broadcastLine = debounce((line) =>
+  {
+    onSendInitialLines(getInitialLines(fileId));
+    broadcastLine = (line) => {
+      sendLineToClients(fileId, line);
+    };
+  }, 100);
 
   tail.watcher.on('line', (data) =>
   {
-    // TODO add line
-    // TODO debounce -> notify clients
+    appendLine(tail, data);
+    broadcastLine(data);
   });
 
   tail.watcher.on('error', (error) =>
   {
+    console.log('Watcher error: ' + error);
   });
 
 
@@ -77,29 +119,40 @@ function stopTail(fileId)
   if (files[fileId].tail === null)
     return;
 
-  files[fileId].watcher.unwatch();
+  files[fileId].tail.watcher.unwatch();
   files[fileId].tail = null;
 }
 
 
 function sendCurrentTail(ws, fileId)
 {
-  initTail(fileId);
-}
-
-
-function appendLine(tail)
-{
-
-}
-/*
-function notifyClients(payload)
-{
-  clients.forEach(socket => {
-    socket.send(JSON.stringify(payload), (error) => {});
+  initTail(fileId, (lines) =>
+  {
+    ws.send(lines, (error) => {});
   });
 }
-*/
+
+
+function appendLine(tail, line)
+{
+  tail.lines[tail.linePointer] = line;
+  tail.linePointer++;
+
+  if (tail.linePointer >= tail.linePointer.length)
+    tail.linePointer = 0;
+}
+
+
+function sendLineToClients(fileId, line)
+{
+  if (!clients.hasOwnProperty(fileId))
+    return;
+
+  clients[fileId].forEach(ws =>
+  {
+    ws.send(line, (error) => {});
+  });
+}
 
 
 app.get('/api/files', (req, res) =>
@@ -113,6 +166,7 @@ app.get('/api/files', (req, res) =>
     };
   }));
 });
+
 
 
 app.ws('/api/live/:fileId', (ws, req) =>
@@ -143,10 +197,10 @@ app.ws('/api/live/:fileId', (ws, req) =>
 
 
 
-var server = app.listen(3000, function()
+let server = app.listen(3000, function()
 {
-  var host = server.address().address;
-  var port = server.address().port;
+  let host = server.address().address;
+  let port = server.address().port;
 
   console.log('LiveLog server running at http://%s:%s', host, port);
 });

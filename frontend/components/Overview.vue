@@ -1,5 +1,6 @@
 <template>
   <div>
+    Please select the log file at the top.
   </div>
 </template>
 

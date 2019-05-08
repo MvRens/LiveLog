@@ -1,10 +1,14 @@
 <template>
   <div>
+    <div id="log">
+      <span class="line" v-for="line in lines">{{ line }}</span>
+    </div>
   </div>
 </template>
 
 <script>
 import axios from 'axios';
+import forEach from 'lodash/forEach';
 
 export default {
   props: [
@@ -14,39 +18,51 @@ export default {
   data()
   {
     return {
+      lines: []
     }
   },
 
 
   mounted()
   {
+    const self = this;
+
+    self.$options.sockets.onopen = () =>
+    {
+      self.lines = [];
+    };
+
     self.$options.sockets.onmessage = (message) =>
     {
-      /*
-      let data = JSON.parse(message.data);
-      if (!data) return;
+      let lines = message.data.split('\n');
 
-      switch (data.msg)
+      forEach(lines, (line) =>
       {
-        case 'change':
-          self.addReloadEntity(data.type);
-          self.reload();
-          break;
-
-        default:
-          console.log('Unknown message type: ' + data.msg);
-          console.log(data);
-      }
-      */
-
-      console.log(data);
+        self.lines.push(line);
+      });
     };
+
+    self.$connect('ws://' + window.location.hostname + ':' + window.location.port + '/api/live/' + self.fileId);
   },
 
 
   destroyed()
   {
+    this.$disconnect();
     delete this.$options.sockets.onmessage;
+    delete this.$options.sockets.onopen;
   }
+
+  // TODO after route change, reset view en reconnect
 }
 </script>
+
+<style lang="scss" scoped>
+#log
+{
+  .line
+  {
+    display: block;
+  }
+}
+</style>

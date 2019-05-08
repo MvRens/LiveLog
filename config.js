@@ -21,7 +21,7 @@ let config = {
     files: [
       {
         "title": "NGINX log",
-        "filename" "/var/log/nginx/access.log",
+        "filename": "/var/log/nginx/access.log",
         "type": "vcombined"
       }
     ]
