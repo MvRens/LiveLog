@@ -197,7 +197,7 @@ app.ws('/api/live/:fileId', (ws, req) =>
 
 
 
-let server = app.listen(3000, function()
+let server = app.listen(config.port, function()
 {
   let host = server.address().address;
   let port = server.address().port;
