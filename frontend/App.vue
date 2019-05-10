@@ -46,11 +46,15 @@ export default {
 html
 {
   height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 body
 {
   height: 100%;
+  margin: 0;
+  padding: 0;
 
   background-color: black;
   background-image: radial-gradient(at top, #404040, black);
@@ -62,8 +66,21 @@ body
   font-size: 12pt;
 }
 
+
+#container
+{
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+}
+
+
 #tabs
 {
+  padding-top: .5em;
+  padding-bottom: .5em;
+
   > a
   {
     color: white;
@@ -77,6 +94,18 @@ body
 
 #page-container
 {
-  margin-top: 1em;
+  flex: 1;
+  overflow: hidden;
+
+  display: flex;
+}
+
+#page
+{
+  flex: 1;
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
 }
 </style>

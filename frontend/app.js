@@ -27,7 +27,15 @@ Vue.use(VueNativeSock, 'ws://', {
 const router = new VueRouter({
   routes: [
     { path: '', component: Overview },
-    { path: '/live/:fileId', component: LiveView, props: true }
+    { path: '/live/:fileId', component: LiveView, props: true,
+      children: [
+        {
+          path: ':filter',
+          component: LiveView,
+          props: true
+        }
+      ]
+    }
   ]
 });
 

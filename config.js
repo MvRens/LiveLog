@@ -11,7 +11,7 @@ let config = {
   /*
     The amount of lines to display when the page is first loaded
   */
-  initialLines: 10,
+  initialLines: 50,
 
   /*
     Array of files which are available to the frontend.

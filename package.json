@@ -10,7 +10,7 @@
     "build": "webpack --config build/webpack.build.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start-frontend": "webpack-dev-server --config build/webpack.dev.js --port 8081",
-    "start-server": "supervisor -w \"server.js,config.js,config.local.js\" server.js"
+    "start-server": "supervisor -w \"server.js,config.js,config.local.js,lib\" server.js"
   },
   "author": "Mark van Renswoude",
   "license": "ISC",

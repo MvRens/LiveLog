@@ -1,7 +1,7 @@
 const express = require('express');
 const nocache = require('nocache');
 const md5 = require('md5');
-const Tail = require('tail').Tail;
+const Tail = require('./lib/tail');
 const debounce = require('debounce');
 const _ = require('lodash');
 
@@ -43,72 +43,45 @@ let clients = {};
 
 
 
-function getInitialLines(fileId)
-{
-  if (files[fileId].tail === null)
-    return;
-
-  let tail = files[fileId].tail;
-  let start = tail.linePointer;
-  let lines = [];
-
-  for (let i = start; i < tail.length; i++)
-  {
-    if (tail.lines[i] !== null)
-      lines.push(tail.lines[i]);
-  }
-
-  for (let i = 0; i < start; i++)
-  {
-    if (tail.lines[i] !== null)
-      lines.push(tail.lines[i]);
-  }
-
-  return lines.join('\n');
-}
-
-
 function initTail(fileId, onSendInitialLines)
 {
   if (files[fileId].tail !== null)
   {
-    onSendInitialLines(getInitialLines(fileId));
+    let lines = files[fileId].tail.getTail();
+    if (lines !== false)
+    {
+      onSendInitialLines(lines);
+    }
+    else
+    {
+      files[fileId].tail.once('tail', (lines) =>
+      {
+        onSendInitialLines(lines);
+      });
+    }
+
     return;
   }
 
-  let tail = {
-    watcher: new Tail(files[fileId].filename, {
-      fromBeginning: true
-    }),
-    lines: [],
-    linePointer: 0
-  };
-
-  tail.lines.length = config.initialLines;
-  for (let i = 0; i < tail.lines.length; i++)
-    tail.lines[i] = null;
-
-  let broadcastLine = null;
-
-  broadcastLine = debounce((line) =>
-  {
-    onSendInitialLines(getInitialLines(fileId));
-    broadcastLine = (line) => {
-      sendLineToClients(fileId, line);
-    };
-  }, 100);
-
-  tail.watcher.on('line', (data) =>
-  {
-    appendLine(tail, data);
-    broadcastLine(data);
+  let tail = new Tail(files[fileId].filename, {
+    initialLines: config.initialLines
   });
 
-  tail.watcher.on('error', (error) =>
+  tail.on('tail', (lines) =>
+  {
+    onSendInitialLines(lines);
+  });
+
+  tail.on('line', (line) =>
+  {
+    // TODO debounce (but unlike default debounce library, make sure to send it at least once every interval)
+    sendLineToClients(fileId, line);
+  });
+
+  tail.on('error', (error) =>
   {
     console.log('Watcher error: ' + error);
   });
-
 
   files[fileId].tail = tail;
 }
@@ -119,7 +92,7 @@ function stopTail(fileId)
   if (files[fileId].tail === null)
     return;
 
-  files[fileId].tail.watcher.unwatch();
+  files[fileId].tail.unwatch();
   files[fileId].tail = null;
 }
 
@@ -128,18 +101,8 @@ function sendCurrentTail(ws, fileId)
 {
   initTail(fileId, (lines) =>
   {
-    ws.send(lines, (error) => {});
+    ws.send(lines.join('\n'), (error) => {});
   });
-}
-
-
-function appendLine(tail, line)
-{
-  tail.lines[tail.linePointer] = line;
-  tail.linePointer++;
-
-  if (tail.linePointer >= tail.linePointer.length)
-    tail.linePointer = 0;
 }
 
 
@@ -191,8 +154,15 @@ app.ws('/api/live/:fileId', (ws, req) =>
     }
   });
 
-
-  sendCurrentTail(ws, fileId);
+  try
+  {
+    sendCurrentTail(ws, fileId);
+  }
+  catch (err)
+  {
+    console.log('Error sending current tail:');
+    console.log(err);
+  }
 });
 
 
