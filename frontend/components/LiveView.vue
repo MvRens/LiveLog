@@ -20,6 +20,15 @@ export default {
   ],
 
 
+  mounted()
+  {
+    this.connected = false;
+
+    if (this.file !== null)
+      this.connect();
+  },
+
+
   watch:
   {
     file(newValue)
@@ -27,25 +36,7 @@ export default {
       if (newValue == null)
         return;
 
-      const self = this;
-
-      self.$options.sockets.onopen = () =>
-      {
-        self.lines = [];
-      };
-
-      self.$options.sockets.onmessage = (message) =>
-      {
-        let lines = message.data.split('\n');
-        let view = self.$refs.view;
-
-        forEach(lines, (line) =>
-        {
-          view.pushLine(line);
-        });
-      };
-
-      self.$connect('ws://' + window.location.hostname + ':' + window.location.port + '/api/live/' + self.fileId);
+      this.connect();
     }
   },
 
@@ -65,10 +56,10 @@ export default {
       if (this.files == null)
         return null;
 
-      const self = this;
-      return find(self.files, (file) =>
+      const fileId = this.fileId;
+      return find(this.files, (file) =>
       {
-        return file.fileId == self.fileId;
+        return file.fileId == fileId;
       });
     },
 
@@ -86,6 +77,36 @@ export default {
         default:
           return DefaultType;
       }
+    }
+  },
+
+
+  methods: {
+    connect()
+    {
+      if (this.connected)
+        return;
+
+      this.connected = true;
+      const self = this;
+
+      self.$options.sockets.onopen = () =>
+      {
+        self.lines = [];
+      };
+
+      self.$options.sockets.onmessage = (message) =>
+      {
+        let lines = message.data.split('\n');
+        let view = self.$refs.view;
+
+        forEach(lines, (line) =>
+        {
+          view.pushLine(line);
+        });
+      };
+
+      self.$connect('ws://' + window.location.hostname + ':' + window.location.port + '/api/live/' + self.fileId);
     }
   }
 }

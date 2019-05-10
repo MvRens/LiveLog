@@ -11,6 +11,7 @@
       <div id="vhost-log" :class="{ noVHost: vhostFilter != '' }">
         <template v-for="line in filteredLines">
           <span class="host"">{{ line.host }}</span>
+          <span class="time">{{ line.time }}</span>
           <span class="requestMethod" :class="'method-' + line.requestMethod">{{ line.requestMethod }}</span>
           <span class="requestPath">{{ line.requestPath }}</span>
         </template>
@@ -67,6 +68,14 @@ export default {
   },
 
 
+  watch: {
+    filter()
+    {
+      this.scrollToBottom(true);
+    }
+  },
+
+
   computed: {
     vhostFilter: {
       get()
@@ -77,8 +86,6 @@ export default {
       set(newValue)
       {
         this.$router.push('/live/' + this.file.fileId + '/' + newValue);
-
-        // TODO after route (filter) change, scroll to bottom
       }
     },
 
@@ -165,11 +172,11 @@ export default {
 #vhost-log
 {
   display: grid;
-  grid-template-columns: repeat(3, auto);
+  grid-template-columns: repeat(4, auto);
 
   &.noVHost
   {
-    grid-template-columns: repeat(2, auto);
+    grid-template-columns: repeat(3, auto);
 
     .host
     {

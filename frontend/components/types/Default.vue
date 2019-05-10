@@ -32,9 +32,22 @@ export default {
       if (newValue.length == 0)
         return;
 
-      let isNew = this.firstData;
-      let eofElement = this.eofElement;
+      this.scrollToBottom(this.firstData);
       this.firstData = false;
+    }
+  },
+
+
+  methods: {
+    pushLine(line)
+    {
+      this.lines.push(line);
+    },
+
+
+    scrollToBottom(force)
+    {
+      let eofElement = this.eofElement;
 
       Vue.nextTick(() =>
       {
@@ -44,19 +57,11 @@ export default {
         var eofPos = eofElement.getBoundingClientRect();
         let viewportHeight = (window.innerHeight || document.documentElement.clientHeight);
 
-        if (isNew || (eofPos.top <= viewportHeight))
+        if (force || (eofPos.top <= viewportHeight))
         {
           eofElement.scrollIntoView();
         }
       });
-    }
-  },
-
-
-  methods: {
-    pushLine(line)
-    {
-      this.lines.push(line);
     }
   }
 }
