@@ -162,6 +162,8 @@ export default {
       {
         console.error('Websocket error: ' + event);
       };
+
+      this.websocket = websocket;
     },
 
 
