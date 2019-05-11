@@ -77,7 +77,14 @@ export default {
 #log
 {
   overflow: auto;
-  padding: 1em;
+  height: 100%;
+
+  margin: 1em;
+  border: solid 1px #000000;
+  box-shadow: inset 0 0 10px #000000;
+  padding: .5em;
+
+  font-size: 10pt;
 
   .line
   {

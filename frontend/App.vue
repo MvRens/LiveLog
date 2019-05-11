@@ -116,4 +116,33 @@ body
   display: flex;
   flex-direction: column;
 }
+
+::-webkit-scrollbar
+{
+  width: 10px;
+}
+
+::-webkit-scrollbar-track
+{
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb
+{
+  background: #202020;
+
+  &:hover
+  {
+    background: #404040;
+  }
+}
+
+
+select
+{
+  background-color: #202020;
+  color: white;
+  font-family: 'Courier New', monospace;
+  border: solid 1px #404040;
+}
 </style>

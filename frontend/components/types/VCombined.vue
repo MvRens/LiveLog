@@ -9,9 +9,20 @@
     </div>
     <div id="vhosts-log-container">
       <div id="vhost-log" :class="{ noVHost: vhostFilter != '' }">
+        <span class="header host-header">Host</span>
+        <span class="header">Time</span>
+        <span class="header">IP</span>
+        <span class="header">User</span>
+        <span class="header">Status</span>
+        <span class="header"></span>
+        <span class="header">Request</span>
+
         <template v-for="line in filteredLines">
           <span class="host"">{{ line.host }}</span>
-          <span class="time">{{ line.time }}</span>
+          <span class="time">{{ line.time.format('YYYY-MM-DD HH:mm:ss') }}</span>
+          <span class="ip">{{ line.remoteAddr }}</span>
+          <span class="username">{{ line.username }}</span>
+          <span class="status" :class="'status-' + line.status">{{ line.status }}</span>
           <span class="requestMethod" :class="'method-' + line.requestMethod">{{ line.requestMethod }}</span>
           <span class="requestPath">{{ line.requestPath }}</span>
         </template>
@@ -25,6 +36,7 @@
 import Vue from 'vue';
 import filter from 'lodash/filter';
 import keys from 'lodash/keys';
+import moment from 'moment';
 
 import DefaultType from './Default.vue';
 
@@ -36,7 +48,7 @@ import DefaultType from './Default.vue';
           '"$request" $status $body_bytes_sent '
           '"$http_referer" "$http_user_agent"';
 */
-const VCombinedRegEx = /^(.+?):(\d+) (.+?) - (.+?) \[(.+?)\] "(.+?) (.+?) (.+?)" \d+ \d+ "(.*?)" "(.*?)"$/m;
+const VCombinedRegEx = /^(.+?):(\d+) (.+?) - (.+?) \[(.+?)\] "(.+?) (.+?) (.+?)" (\d+) (\d+) "(.*?)" "(.*?)"$/m;
 
 const IdxHost = 1;
 const IdxPort = 2;
@@ -132,7 +144,7 @@ export default {
         port: match[IdxPort],
         remoteAddr: match[IdxRemoteAddr],
         username: match[IdxUsername],
-        time: match[IdxTime],
+        time: moment(match[IdxTime], 'DD/MMM/YYYY:HH:mm:ss ZZ'),
         requestMethod: match[IdxRequestMethod],
         requestPath: match[IdxRequestPath],
         requestHTTPVersion: match[IdxRequestHTTPVersion],
@@ -173,11 +185,13 @@ export default {
 
   border: solid 1px #000000;
   box-shadow: inset 0 0 10px #000000;
-  padding: .5em;
+  padding: 0 .5em .5em .5em;
+
+  font-size: 10pt;
 }
 
 
-$columnCount: 4;
+$columnCount: 7;
 
 #vhost-log
 {
@@ -188,14 +202,14 @@ $columnCount: 4;
   {
     grid-template-columns: repeat($columnCount - 2, min-content) auto;
 
-    .host
+    .host, .host-header
     {
       display: none;
     }
   }
 
 
-  grid-column-gap: 1em;
+//  grid-column-gap: 1em;
   grid-row-gap: 0;
 
   & > span
@@ -203,10 +217,27 @@ $columnCount: 4;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-right: 1em;
+
+
+    &.header
+    {
+      position: sticky;
+      top: 0;
+      background-color: #202020;
+      margin-right: 0;
+      padding: .25em 1em .25em 0;
+    }
+
 
     &.host
     {
       color: #c0c0c0;
+    }
+
+    &.ip
+    {
+      color: #fffbbc;
     }
 
     &.requestMethod
@@ -216,6 +247,24 @@ $columnCount: 4;
       &.method-POST
       {
         color: lime;
+      }
+    }
+
+    &.status
+    {
+      &.status-200
+      {
+        color: green;
+      }
+
+      &.status-401
+      {
+        color: orange;
+      }
+
+      &.status-400, &.status-500, &.status-501, &.status-502, &.status-503
+      {
+        color: red;
       }
     }
   }
