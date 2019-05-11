@@ -1,5 +1,8 @@
 <template>
   <div>
+    <div id="status" v-if="statusVisible">
+      <span class="statusText">{{ statusText }}</span>
+    </div>
     <component :is="getViewType" :file="file" :filter="filter" ref="view"></component>
   </div>
 </template>
@@ -20,9 +23,16 @@ export default {
   ],
 
 
+  data()
+  {
+    return {
+      status: 'connecting'
+    };
+  },
+
+
   mounted()
   {
-    this.connected = false;
     this.websocket = null;
     this.reconnectTimer = null;
 
@@ -38,6 +48,7 @@ export default {
       if (newValue == null)
         return;
 
+      this.disconnect();
       this.connect();
     }
   },
@@ -77,6 +88,30 @@ export default {
         default:
           return DefaultType;
       }
+    },
+
+
+    statusVisible()
+    {
+      return this.status != 'connected';
+    },
+
+
+    statusText()
+    {
+      switch (this.status)
+      {
+        case 'connecting':
+          return 'Connecting...';
+
+        case 'waitingForData':
+          return 'Connected, waiting for data...';
+
+        case 'disconnected':
+          return 'Disconnected, retrying in 1 second';
+      }
+
+      return '';
     }
   },
 
@@ -88,22 +123,25 @@ export default {
         return;
 
       this.connected = true;
+      this.status = 'connecting';
 
 
       let wsURL = 'ws://' + window.location.hostname + ':' + window.location.port + '/api/live/' + encodeURIComponent(this.fileId);
-      this.websocket = new WebSocket(wsURL);
 
-      const self = this;
-      const getView = () => { return self.$refs.view; };
+      let websocket = new WebSocket(wsURL);
+      const getView = () => { return this.$refs.view; };
 
-      this.websocket.onopen = () =>
+      websocket.onopen = () =>
       {
         console.log('Websocket connected');
+        this.status = 'waitingForData';
         getView().resetLines();
       };
 
-      this.websocket.onmessage = (event) =>
+      websocket.onmessage = (event) =>
       {
+        this.status = 'connected';
+
         let lines = event.data.split('\n');
         let view = getView();
 
@@ -113,19 +151,14 @@ export default {
         });
       };
 
-      this.websocket.onclose = () =>
+      websocket.onclose = () =>
       {
-        console.log('Websocket closed');
-
-        if (self.connected)
-        {
-          console.log('Reconnecting');
-          this.disconnect();
-          self.reconnect();
-        }
+        console.log('Websocket closed unexpectedly, reconnecting');
+        this.disconnect();
+        this.reconnect();
       };
 
-      this.websocket.onerror = (event) =>
+      websocket.onerror = (event) =>
       {
         console.error('Websocket error: ' + event);
       };
@@ -138,9 +171,15 @@ export default {
         clearTimeout(this.reconnectTimer);
 
       this.connected = false;
+      this.status = 'disconnected';
 
       if (this.websocket !== null)
       {
+        delete this.websocket.onopen;
+        delete this.websocket.onmessage;
+        delete this.websocket.onclose;
+        delete this.websocket.onerror;
+
         this.websocket.close();
         this.websocket = null;
       }
@@ -152,13 +191,32 @@ export default {
       if (this.reconnectTimer !== null)
         clearTimeout(this.reconnectTimer);
 
-      const self = this;
       this.reconnectTimer = setTimeout(() =>
       {
         this.reconnectTimer = null;
-        self.connect();
+        this.connect();
       }, 1000);
     }
   }
 }
 </script>
+
+
+<style lang="scss" scoped>
+#status
+{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 1em;
+  text-align: center;
+
+  .statusText
+  {
+    background-color: #fffbbc;
+    color: black;
+    padding: .5em;
+    box-shadow: 3px 3px 10px 0px black;
+  }
+}
+</style>
