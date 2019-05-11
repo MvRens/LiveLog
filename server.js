@@ -2,7 +2,6 @@ const express = require('express');
 const nocache = require('nocache');
 const md5 = require('md5');
 const Tail = require('./lib/tail');
-const debounce = require('debounce');
 const _ = require('lodash');
 
 const config = require('./config');
@@ -10,13 +9,13 @@ const config = require('./config');
 
 if (!Array.isArray(config.files))
 {
-  console.log("Error: config.files must be an array");
+  console.error("Error: config.files must be an array");
   return;
 }
 
 if (config.files.length == 0)
 {
-  console.log("Warning: config.files is empty");
+  console.warn("Warning: config.files is empty");
 }
 
 
@@ -24,11 +23,41 @@ let files = {};
 _.forEach(config.files, (file) =>
 {
   let fileId = md5(file.filename);
+
+  let filter = null;
+  let exclude = file.exclude;
+
+  if (typeof exclude == 'function')
+  {
+    filter = (line) =>
+    {
+      return !exclude(line);
+    };
+  }
+  else if (Array.isArray(exclude) && exclude.length > 0)
+  {
+    filter = (line) =>
+    {
+      for (let i = 0, len = exclude.length; i < len; i++)
+      {
+        if (exclude[i].test(line))
+          return false;
+      }
+
+      return true;
+    };
+  }
+  else
+  {
+    console.error('Error: exclude must be a function or array in config');
+  }
+
   files[fileId] = {
     filename: file.filename,
     title: file.title || file.filename,
     type: file.type || '',
-    tail: null
+    tail: null,
+    filter: filter
   };
 });
 
@@ -64,7 +93,8 @@ function initTail(fileId, onSendInitialLines)
   }
 
   let tail = new Tail(files[fileId].filename, {
-    initialLines: config.initialLines
+    initialLines: config.initialLines,
+    filter: files[fileId].filter
   });
 
   tail.on('tail', (lines) =>

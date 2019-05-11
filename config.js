@@ -20,9 +20,12 @@ let config = {
 
     files: [
       {
-        "title": "NGINX log",
-        "filename": "/var/log/nginx/access.log",
-        "type": "vcombined"
+        title: 'NGINX log',
+        filename: '/var/log/nginx/access.log',
+        type: 'vcombined',
+        exclude: [
+          /"(GET|POST) \/signalr/
+        ]
       }
     ]
 
@@ -33,6 +36,11 @@ let config = {
     The type is optional and used in the frontend to apply formatting.
     In the example, "vcombined" is used to indicate a standard Combined Log Format
     with added VirtualHost.
+
+    Exclude is optional and can be either a function or an array of regular expressions.
+    If set to a function, the line to filter is passed as the first parameter and false
+    must be returned for the line to appear in the tail. If set to an array, if any
+    of the items are a match the line is excluded from the tail.
   */
   files: []
 };

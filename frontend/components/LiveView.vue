@@ -23,6 +23,8 @@ export default {
   mounted()
   {
     this.connected = false;
+    this.websocket = null;
+    this.reconnectTimer = null;
 
     if (this.file !== null)
       this.connect();
@@ -43,9 +45,7 @@ export default {
 
   destroyed()
   {
-    this.$disconnect();
-    delete this.$options.sockets.onmessage;
-    delete this.$options.sockets.onopen;
+    this.disconnect();
   },
 
   // TODO after route change, reset view en reconnect
@@ -88,17 +88,24 @@ export default {
         return;
 
       this.connected = true;
-      const self = this;
 
-      self.$options.sockets.onopen = () =>
+
+      let wsURL = 'ws://' + window.location.hostname + ':' + window.location.port + '/api/live/' + encodeURIComponent(this.fileId);
+      this.websocket = new WebSocket(wsURL);
+
+      const self = this;
+      const getView = () => { return self.$refs.view; };
+
+      this.websocket.onopen = () =>
       {
-        self.lines = [];
+        console.log('Websocket connected');
+        getView().resetLines();
       };
 
-      self.$options.sockets.onmessage = (message) =>
+      this.websocket.onmessage = (event) =>
       {
-        let lines = message.data.split('\n');
-        let view = self.$refs.view;
+        let lines = event.data.split('\n');
+        let view = getView();
 
         forEach(lines, (line) =>
         {
@@ -106,7 +113,51 @@ export default {
         });
       };
 
-      self.$connect('ws://' + window.location.hostname + ':' + window.location.port + '/api/live/' + self.fileId);
+      this.websocket.onclose = () =>
+      {
+        console.log('Websocket closed');
+
+        if (self.connected)
+        {
+          console.log('Reconnecting');
+          this.disconnect();
+          self.reconnect();
+        }
+      };
+
+      this.websocket.onerror = (event) =>
+      {
+        console.error('Websocket error: ' + event);
+      };
+    },
+
+
+    disconnect()
+    {
+      if (this.reconnectTimer !== null)
+        clearTimeout(this.reconnectTimer);
+
+      this.connected = false;
+
+      if (this.websocket !== null)
+      {
+        this.websocket.close();
+        this.websocket = null;
+      }
+    },
+
+
+    reconnect()
+    {
+      if (this.reconnectTimer !== null)
+        clearTimeout(this.reconnectTimer);
+
+      const self = this;
+      this.reconnectTimer = setTimeout(() =>
+      {
+        this.reconnectTimer = null;
+        self.connect();
+      }, 1000);
     }
   }
 }

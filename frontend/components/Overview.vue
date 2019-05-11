@@ -1,23 +1,32 @@
 <template>
   <div>
-    Please select the log file at the top.
+    <div id="overview">
+      Select the log file:<br /><br />
+
+      <div v-for="(file, index) in files" class="file">
+        [{{ index }}] <router-link :to="{ name: 'live', params: { fileId: file.fileId } }">{{ file.title }}</router-link>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import axios from 'axios';
-
 export default {
   props: [
     'files'
-  ],
-
-
-  mounted()
-  {
-  }
+  ]
 }
 </script>
 
 <style lang="scss" scoped>
+#overview
+{
+  padding: 1em;
+
+  a
+  {
+    color: white;
+    text-decoration: underline;
+  }
+}
 </style>

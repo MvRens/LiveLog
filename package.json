@@ -36,7 +36,6 @@
     "uglifyjs-webpack-plugin": "^2.1.2",
     "vue": "^2.6.10",
     "vue-loader": "^15.7.0",
-    "vue-native-websocket": "^2.0.13",
     "vue-router": "^3.0.6",
     "vue-style-loader": "^4.1.2",
     "vue-template-compiler": "^2.6.10",
@@ -47,7 +46,6 @@
     "webpack-merge": "^4.2.1"
   },
   "dependencies": {
-    "debounce": "^1.2.0",
     "express": "^4.16.4",
     "express-ws": "^4.0.0",
     "lodash": "^4.17.11",

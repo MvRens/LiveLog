@@ -39,6 +39,12 @@ export default {
 
 
   methods: {
+    resetLines()
+    {
+      this.lines = [];
+    },
+
+
     pushLine(line)
     {
       this.lines.push(line);

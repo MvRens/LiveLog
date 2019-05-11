@@ -1,8 +1,8 @@
 <template>
   <div id="container">
     <div id="tabs">
-      <router-link to="/" active-class="active" exact>Overview</router-link>
-      <router-link v-if="files !== null" v-for="file in files" :key="file.fileId" :to="'/live/' + encodeURIComponent(file.fileId)" class="tab" active-class="active" exact>{{ file.title }}</router-link>
+      <router-link :to="{ name: 'overview' }" active-class="active" exact>Overview</router-link>
+      <router-link v-if="files !== null" v-for="file in files" :key="file.fileId" :to="{ name: 'live', params: { fileId: file.fileId } }" class="tab" active-class="active">{{ file.title }}</router-link>
     </div>
 
     <div id="page-container">
@@ -78,16 +78,24 @@ body
 
 #tabs
 {
+  background-color: black;
   padding-top: .5em;
   padding-bottom: .5em;
+  border-bottom: solid 1px black;
 
   > a
   {
     color: white;
     text-decoration: none;
+    padding-top: .5em;
+    padding-bottom: .5em;
     padding-left: 1em;
     padding-right: 1em;
-    border-right: solid 1px white;
+
+    &.active
+    {
+      background-color: #404040;
+    }
   }
 }
 

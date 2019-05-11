@@ -85,7 +85,10 @@ export default {
 
       set(newValue)
       {
-        this.$router.push('/live/' + this.file.fileId + '/' + newValue);
+        if (newValue)
+          this.$router.push({ name: 'live-filtered', params: { fileId: this.file.fileId, filter: newValue } });
+        else
+          this.$router.push({ name: 'live', params: { fileId: this.file.fileId } });
       }
     },
 
@@ -149,6 +152,7 @@ export default {
 <style lang="scss" scoped>
 #log
 {
+  height: 100%;
   padding: 1em;
 
   display: flex;
@@ -166,17 +170,23 @@ export default {
 {
   flex: 1;
   overflow: auto;
+
+  border: solid 1px #000000;
+  box-shadow: inset 0 0 10px #000000;
+  padding: .5em;
 }
 
+
+$columnCount: 4;
 
 #vhost-log
 {
   display: grid;
-  grid-template-columns: repeat(4, auto);
+  grid-template-columns: repeat($columnCount - 1, min-content) auto;
 
   &.noVHost
   {
-    grid-template-columns: repeat(3, auto);
+    grid-template-columns: repeat($columnCount - 2, min-content) auto;
 
     .host
     {
