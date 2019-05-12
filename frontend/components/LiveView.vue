@@ -11,7 +11,6 @@
 import axios from 'axios';
 import forEach from 'lodash/forEach';
 import find from 'lodash/find';
-import moment from 'moment';
 
 import DefaultType from './types/Default.vue';
 import VCombinedType from './types/VCombined.vue';

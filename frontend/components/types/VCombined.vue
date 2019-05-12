@@ -35,6 +35,7 @@
 import Vue from 'vue';
 import filter from 'lodash/filter';
 import keys from 'lodash/keys';
+import moment from 'moment';
 
 import DefaultType from './Default.vue';
 
