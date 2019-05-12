@@ -3,7 +3,7 @@ if ! git pull; then
   exit 1
 fi
 
-if ! npm install then
+if ! npm install; then
   exit 1
 fi
 
