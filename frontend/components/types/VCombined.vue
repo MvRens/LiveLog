@@ -26,7 +26,6 @@
           <span class="requestMethod" :class="'method-' + line.requestMethod">{{ line.requestMethod }}</span>
           <span class="requestPath">{{ line.requestPath }}</span>
         </template>
-        <div id="eof"></div>
       </div>
     </div>
   </div>
@@ -36,7 +35,6 @@
 import Vue from 'vue';
 import filter from 'lodash/filter';
 import keys from 'lodash/keys';
-import moment from 'moment';
 
 import DefaultType from './Default.vue';
 
@@ -155,7 +153,13 @@ export default {
       };
 
       Vue.set(this.vhosts, parsedLine.host, true);
-      this.lines.push(parsedLine);
+      this.rawPushLine(parsedLine);
+    },
+
+
+    getScrollingElement()
+    {
+      return document.getElementById('vhosts-log-container');
     }
   }
 }
@@ -268,11 +272,5 @@ $columnCount: 7;
       }
     }
   }
-}
-
-
-#eof
-{
-  height: 4px;
 }
 </style>

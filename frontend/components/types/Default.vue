@@ -1,12 +1,19 @@
 <template>
   <div id="log">
     <span class="line" v-for="line in lines">{{ line }}</span>
-    <div id="eof"></div>
   </div>
 </template>
 
 <script>
 import Vue from 'vue';
+
+
+// Maximum number of lines to show, limited to prevent overloading the browser
+const MaxLineCount = 200;
+
+// Automatically scroll vertically when within this much pixels from the bottom
+const AutoScrollDelta = 20;
+
 
 export default {
   data()
@@ -19,7 +26,7 @@ export default {
 
   mounted()
   {
-    this.eofElement = document.getElementById('eof');
+    this.scrollingElement = this.getScrollingElement();
     this.firstData = true;
   },
 
@@ -47,27 +54,38 @@ export default {
 
     pushLine(line)
     {
+      this.rawPushLine(line);
+    },
+
+
+    rawPushLine(line)
+    {
       this.lines.push(line);
+
+      while (this.lines.length >= MaxLineCount)
+        this.lines.shift();
+    },
+
+
+    getScrollingElement()
+    {
+      return document.getElementById('log');
     },
 
 
     scrollToBottom(force)
     {
-      let eofElement = this.eofElement;
+      let scrollingElement = this.scrollingElement;
+      let distanceFromBottom = scrollingElement.scrollHeight - scrollingElement.scrollTop - scrollingElement.clientHeight;
 
-      Vue.nextTick(() =>
+
+      if (distanceFromBottom <= AutoScrollDelta)
       {
-        // Only scroll when we are at the bottom. The #eof element is used to keep track.
-        // TODO allow a few more pixels slack?
-        // TODO can we use scrollTop / scrollHeight instead? which is better?
-        var eofPos = eofElement.getBoundingClientRect();
-        let viewportHeight = (window.innerHeight || document.documentElement.clientHeight);
-
-        if (force || (eofPos.top <= viewportHeight))
+        Vue.nextTick(() =>
         {
-          eofElement.scrollIntoView();
-        }
-      });
+          scrollingElement.scrollTop = scrollingElement.scrollHeight - scrollingElement.clientHeight;
+        });
+      }
     }
   }
 }
@@ -91,11 +109,5 @@ export default {
     display: block;
     white-space: nowrap;
   }
-}
-
-
-#eof
-{
-  height: 4px;
 }
 </style>

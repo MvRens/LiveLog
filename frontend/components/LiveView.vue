@@ -11,6 +11,7 @@
 import axios from 'axios';
 import forEach from 'lodash/forEach';
 import find from 'lodash/find';
+import moment from 'moment';
 
 import DefaultType from './types/Default.vue';
 import VCombinedType from './types/VCombined.vue';
@@ -59,7 +60,6 @@ export default {
     this.disconnect();
   },
 
-  // TODO after route change, reset view en reconnect
 
   computed: {
     file()
@@ -131,6 +131,18 @@ export default {
       let websocket = new WebSocket(wsURL);
       const getView = () => { return this.$refs.view; };
 
+
+      // For testing purposes - note that it is not cleared when changing the view,
+      // so they will stack and bleed into other logs.
+      /*
+      setInterval(() =>
+      {
+        getView().pushLine('test:80 127.0.0.1 - - [' + moment().format('DD/MMM/YYYY:HH:mm:ss ZZ') + '] ' +
+                           '"POST / HTTP/1.1" 200 69 "-" "Totally real user agent"');
+      }, 1000);
+      */
+
+
       websocket.onopen = () =>
       {
         console.log('Websocket connected');
@@ -177,10 +189,10 @@ export default {
 
       if (this.websocket !== null)
       {
-        delete this.websocket.onopen;
-        delete this.websocket.onmessage;
-        delete this.websocket.onclose;
-        delete this.websocket.onerror;
+        this.websocket.onopen = null;
+        this.websocket.onmessage = null;
+        this.websocket.onclose = null;
+        this.websocket.onerror = null;
 
         this.websocket.close();
         this.websocket = null;
