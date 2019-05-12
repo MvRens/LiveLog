@@ -47,7 +47,7 @@ import DefaultType from './Default.vue';
           '"$request" $status $body_bytes_sent '
           '"$http_referer" "$http_user_agent"';
 */
-const VCombinedRegEx = /^(.+?):(\d+) (.+?) - (.+?) \[(.+?)\] "(.+?) (.+?) (.+?)" (\d+) (\d+) "(.*?)" "(.*?)"$/m;
+const VCombinedRegEx = /^(.*?):(\d+) (.+?) - (.+?) \[(.+?)\] "(.+?) (.+?) (.+?)" (\d+) (\d+) "(.*?)" "(.*?)"$/m;
 
 const IdxHost = 1;
 const IdxPort = 2;
