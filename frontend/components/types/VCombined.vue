@@ -3,8 +3,8 @@
     <div id="vhosts">
       Virtual host:
       <select v-model="vhostFilter">
-        <option value="">All</option>
-        <option v-for="vhost in sortedVHosts" :value="vhost">{{ vhost }}</option>
+        <option :value="false">All</option>
+        <option v-for="vhost in sortedVHosts" :value="vhost">{{ vhost || '[Empty]' }}</option>
       </select>
     </div>
     <div id="vhosts-log-container">
@@ -91,13 +91,19 @@ export default {
     vhostFilter: {
       get()
       {
-        return this.filter || '';
+        let filter = typeof this.filter === 'undefined' ? false : this.filter;
+
+        if (filter !== false && filter.startsWith('h:'))
+          filter = filter.substr(2);
+
+        return filter;
       },
 
       set(newValue)
       {
-        if (newValue)
-          this.$router.push({ name: 'live-filtered', params: { fileId: this.file.fileId, filter: newValue } });
+        if (newValue !== false)
+          // The h: prefix is added so that empty hosts will be a valid parameter for the route
+          this.$router.push({ name: 'live-filtered', params: { fileId: this.file.fileId, filter: 'h:' + newValue } });
         else
           this.$router.push({ name: 'live', params: { fileId: this.file.fileId } });
       }
@@ -115,10 +121,10 @@ export default {
 
     filteredLines()
     {
-      if (!this.filter)
+      if (this.vhostFilter === false)
         return this.lines;
 
-      let filterHost = this.filter;
+      let filterHost = this.vhostFilter;
 
       return filter(this.lines, (line) =>
       {
@@ -257,7 +263,7 @@ $columnCount: 7;
 
     &.status
     {
-      &.status-200
+      &.status-101, &.status-200, &.status-301
       {
         color: green;
       }
@@ -267,7 +273,7 @@ $columnCount: 7;
         color: orange;
       }
 
-      &.status-400, &.status-500, &.status-501, &.status-502, &.status-503
+      &.status-400, &.status-404, &.status-500, &.status-501, &.status-502, &.status-503
       {
         color: red;
       }
